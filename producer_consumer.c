@@ -19,7 +19,13 @@ int producer_consumer_init(int buffSize, int prod, int cons, int uuid)
   
 void producer_consumer_exit(void)
 {
-    printk(KERN_INFO "Goodbye Dave\n");
+    down_interruptible(mutex);
+    down_interruptible();
+    down_interruptible();
+    kthread_stop(struct task_struct *producer);
+    kthread_stop(struct task_struct *consumer);
+    printk(KERN_INFO "The total elapsed time of all processes for UID %d is", uuid);
+    printk(KERN_INFO "%d:%d:%d", hours, minutes, seconds);
 }
 
 module_init(producer_consumer_init);
