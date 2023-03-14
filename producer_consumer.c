@@ -10,14 +10,18 @@
 #include <linux/timer.h>
 #include <linux/slab.h>
 
-static int __init producer_consumer(int buffSize, int prod, int cons, int uuid)
+int producer_consumer_init(int buffSize, int prod, int cons, int uuid)
 {
-
+    module_param(uid, buff_size, p, c) #uid is user uid, buffer size, total # of producer threads, total # of consumer threads
     printk(KERN_INFO "Hello world\n");
     return 0;
 }
   
-static void __exit hello_end(void)
+void producer_consumer_exit(void)
 {
-    printk(KERN_INFO "Goodbye Mr.\n");
+    printk(KERN_INFO "Goodbye Dave\n");
 }
+
+module_init(producer_consumer_init);
+module_exit(producer_consumer_exit);
+MODULE_LICENSE("GPL");
