@@ -14,7 +14,6 @@
 #define CONSUMER_THREAD 3
 sem_t semEmpty;
 sem_t semFull;
-pthread_mutex_t mutexBuffer;
 
 task_struct *task;
 
@@ -24,44 +23,41 @@ int producer_consumer_init(int buffSize, int prod, int cons, int uuid)
     printk(KERN_INFO "Hello world\n");
 
     // Dac Le initialize
-    pthread_t thread[prod + cons];
-    pthread_mutex_init(&mutexBuffer, NULL);
+
     sem_init(&semEmpty, 0, buffSize);
     sem_init(&semFull, 0, 0);
 
-    if (kthread_run(&thread[0], NULL, &producer_thread, NULL) != 0)
+    if (kthread_run(producer_thread, NULL, "Producer-1") != 0)
     {
         printk("Failed to create producer thread");
     }
 
-    for (int i = 0; i < cons; ++i)
-        if (kthread_run(&thread[0], NULL, &consumer_thread, NULL) != 0)
-        {
-            printk("Failed to create consumer thread");
-        }
+    if (kthread_run(consumer_thread, NULL, "Consumer-1") != 0)
+    {
+        printk("Failed to create consumer thread");
+    }
 
 
     sem_destroy(&semEmpty);
     sem_destroy(&semFull);
-    //pthread_mutex_destroy(&mutexBuffer);
-    kthread_stop(&mutexBuffer);
-
     return 0;
 }
 
 void* producer_thread(void* args)
 {
-    while(1)
+    while(!kthread_should_stop())
     {
         // Produce
         sem_wait(&semEmpty);
-        pthread_mutex_lock(&mutexBuffer);
+        
+        if (down_interruptible(&semEmpty))
+            break;
         // do something
-        for_each_process(task) { 
-            printf(task->pid); //the Process ID
-            printf(task->cred->uid.val); //the UUID
+        struct task_struct* p;
+        for_each_process(p)
+        {
+            printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->name, p->item, p->index, p->pid);
         }
-
         // end of something
         pthread_mutex_unlock(&mutexBuffer);
         sem_post(&semFull);
@@ -71,14 +67,29 @@ void* producer_thread(void* args)
 
 void* consumer_thread(void* args)
 {
-    while(1)
+    while(!kthread_should_stop())
     {
         sem_wait(&semFull);
-        pthread_mutex_lock(&mutexBuffer);
-        // do something
+        //pthread_mutex_lock(&mutexBuffer);
 
+        if (down_interruptible(&semFull))
+            break;
+
+
+        // do something
+        struct task_struct* p;
+        for_each_process(p)
+        {
+            int nanosecond = ktime_get_ns() - p->start_time;
+            int second = nanosecond/1000000000;
+            int minute = second/60;
+            second %= 60;
+            int hour = minute/60;
+            minute %= 60;
+            printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d");
+        }
         // end of something
-        pthread_mutex_unlock(&semEmpty);
+        //pthread_mutex_unlock(&semEmpty);
         sem_post(&semEmpty);
     }
 }
