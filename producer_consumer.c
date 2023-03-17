@@ -27,7 +27,7 @@ void producer_consumer_exit(void)
     kthread_stop(struct task_struct *producer);
     kthread_stop(struct task_struct *consumer);
     printk(KERN_INFO "The total elapsed time of all processes for UID %d is", uuid);
-    printk(KERN_INFO "%d:%d:%d", hours, minutes, seconds);
+    printk(KERN_INFO "%d:%d:%d\n", hours, minutes, seconds);
 }
 
 module_init(producer_consumer_init);
