@@ -57,6 +57,10 @@ void* producer_thread(void* args)
         sem_wait(&semEmpty);
         pthread_mutex_lock(&mutexBuffer);
         // do something
+        for_each_process(task) { 
+            printf(task->pid); //the Process ID
+            printf(task->cred->uid.val); //the UUID
+        }
 
         // end of something
         pthread_mutex_unlock(&mutexBuffer);
