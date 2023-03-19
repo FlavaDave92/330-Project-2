@@ -103,7 +103,7 @@ void producer_consumer_exit(void)
     down_interruptible(semFull);
     kthread_stop(struct task_struct *producer);
     kthread_stop(struct task_struct *consumer);
-    int second = nanosecond/1000000000;
+    int second = totalNano/1000000000;
     int minute = second/60        
     second %= 60;
     int hour = minute/60;
