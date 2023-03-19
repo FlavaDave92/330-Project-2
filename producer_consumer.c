@@ -51,6 +51,7 @@ void* producer_thread(void* args)
     {
         // Produce
         sem_wait(&semEmpty);
+        pthread_mutex_lock(&mutex);
         
         if (down_interruptible(&semEmpty))
             break;
@@ -61,7 +62,7 @@ void* producer_thread(void* args)
             printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->name, p->item, p->index, p->pid);
         }
         // end of something
-        pthread_mutex_unlock(&mutexBuffer);
+        pthread_mutex_unlock(&mutex);
         sem_post(&semFull);
     }
 }
@@ -72,7 +73,7 @@ void* consumer_thread(void* args)
     while(!kthread_should_stop())
     {
         sem_wait(&semFull);
-        //pthread_mutex_lock(&mutexBuffer);
+        pthread_mutex_lock(&mutex);
 
         if (down_interruptible(&semFull))
             break;
@@ -92,7 +93,7 @@ void* consumer_thread(void* args)
             printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d");
         }
         // end of something
-        //pthread_mutex_unlock(&semEmpty);
+        pthread_mutex_unlock(&mutex);
         sem_post(&semEmpty);
     }
 }
