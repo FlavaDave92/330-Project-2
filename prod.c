@@ -53,15 +53,13 @@ int producer_consumer_init(void)
     sema_init(&mutex, 1);
 
     processArray= vmalloc(buffSize*sizeof(struct task_struct));
-
-    if (kthread_run(producer_thread, NULL, "Producer-1") != 0)
+    if(prod > 0)
     {
-        printk("Failed to create producer thread");
-    }
-
-    if (kthread_run(consumer_thread, NULL, "Consumer-1") != 0)
-    {
-        printk("Failed to create consumer thread");
+      producerThread = kthread_run(producer_thread, NULL, "producer-1");
+      if(cons > 0)
+	{
+	   consumerThread = kthread_run(consumer_thread, NULL, "consumer-1");
+	}
     }
 	
     return 0;
