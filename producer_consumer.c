@@ -14,12 +14,13 @@
 #define CONSUMER_THREAD 3
 sem_t semEmpty;
 sem_t semFull;
+int totalNano
 
 task_struct *task;
 
 int producer_consumer_init(int buffSize, int prod, int cons, int uuid)
 {
-    module_param(uid, buff_size, p, c) #uid is user uid, buffer size, total # of producer threads, total # of consumer threads
+    module_param(buffSize, prod, cons, uuid) #uid is user uid, buffer size, total # of producer threads, total # of consumer threads
     printk(KERN_INFO "Hello world\n");
 
     // Dac Le initialize
@@ -81,6 +82,7 @@ void* consumer_thread(void* args)
         for_each_process(p)
         {
             int nanosecond = ktime_get_ns() - p->start_time;
+            totalNano = totalNano + nanosecond;
             int second = nanosecond/1000000000;
             int minute = second/60;
             second %= 60;
@@ -97,12 +99,17 @@ void* consumer_thread(void* args)
 void producer_consumer_exit(void)
 {
     down_interruptible(mutex);
-    down_interruptible();
-    down_interruptible();
+    down_interruptible(semEmpty);
+    down_interruptible(semFull);
     kthread_stop(struct task_struct *producer);
     kthread_stop(struct task_struct *consumer);
+    int second = nanosecond/1000000000;
+    int minute = second/60        
+    second %= 60;
+    int hour = minute/60;
+    minute %= 60;
     printk(KERN_INFO "The total elapsed time of all processes for UID %d is", uuid);
-    printk(KERN_INFO "%d:%d:%d", hours, minutes, seconds);
+    printk(KERN_INFO "%d:%d:%d", hour, minute, second);
 }
 
 module_init(producer_consumer_init);
