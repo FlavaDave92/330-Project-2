@@ -92,7 +92,7 @@ static int producer_thread(void* args)
             pcount++;
             processArray[prodind] = *p;
             prodind = (prodind+1) % buffSize; 
-            printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->comm, count, prodind, p->pid);
+            printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->comm, pcount, prodind, p->pid);
         
         // end of something
         pthread_mutex_unlock(&mutex);
