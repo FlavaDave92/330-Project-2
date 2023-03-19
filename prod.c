@@ -21,19 +21,19 @@ module_param(cons, int, 0644);
 module_param(uuid, int, 0644);
 
 
-sem_t semEmpty;
-sem_t semFull;
-pthread_mutex_t mutex;
+struct semaphore empty;
+struct semaphore full;
+struct semaphore mutex;
 
 
 struct task_struct* p;
-int prodind = 0;
-int prodcount = 0;
+int prodInd = 0;
+int prodCount = 0;
 struct task_struct* processArray;
-int pcount = 0;
-int ccount = 0;
+int pCount = 0;
+int cCount = 0;
 
-int conind = 0;
+int conInd = 0;
 
 struct task_struct* task;
 
@@ -48,8 +48,9 @@ int producer_consumer_init(void)
 
     // Dac Le initialize
 
-    sem_init(&semEmpty, 0, buffSize);
-    sem_init(&semFull, 0);
+    sema_init(&empty, buffSize);
+    sema_init(&full, 0);
+    sema_init(&mutex, 1);
 
     processArray= vmalloc(buffSize*sizeof(struct task_struct));
 
@@ -62,10 +63,7 @@ int producer_consumer_init(void)
     {
         printk("Failed to create consumer thread");
     }
-
-
-    sem_destroy(&semEmpty);
-    sem_destroy(&semFull);
+	
     return 0;
 }
 
@@ -75,29 +73,27 @@ static int producer_thread(void* args)
   
     for_each_process(p)
     {
-        pthread_mutex_lock(&mutex);
-       if(uuid != p->cred->uid.val)
-	      {
+    	down(&mutex);
+   	if(uuid != p->cred->uid.val) {
 	       continue;
-  	    }
+   	}
         else{
         
-        if (down_interruptible(&semEmpty))
-            break;
-
-         if(cons == 0 && buffSize == prodind)  
-	          break;
-        
-        
-            pcount++;
-            processArray[prodind] = *p;
-            prodind = (prodind+1) % buffSize; 
-            printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->comm, pcount, prodind, p->pid);
+        	if (down_interruptible(&empty)) {
+        		break;
+		}
+		if(cons == 0 && buffSize == prodInd) {
+			break;
+		}
+        	pcount++;
+        	processArray[prodInd] = *p;
+       	 	prodInd = (prodInd+1) % buffSize; 
+        	printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->comm, pCount, prodInd, p->pid);
         
         // end of something
-        pthread_mutex_unlock(&mutex);
-        up(&semFull);
-    }
+        	up(&mutex);
+        	up(&full);
+    	}
     }
 
        return 0;
@@ -127,15 +123,15 @@ static int consumer_thread(void* args)
             second %= 60;
             int hour = minute/60;
             minute %= 60;
-            ccount++;
-            printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", timeproc->comm, ccount, conind, timeproc.pid, hours, minutes,seconds );
-            conind = (conind+1)%buffSize;
+            cCount++;
+            printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", timeproc->comm, cCount, conInd, timeproc.pid, hour, minute,second);
+            conInd = (conInd+1)%buffSize;
 
         
 
         // end of something
-        pthread_mutex_unlock(&mutex);
-        sem_post(&semEmpty);
+        up(&mutex);
+        up(&empty);
     }
 
      return 0;
@@ -145,20 +141,16 @@ static int consumer_thread(void* args)
 void producer_consumer_exit(void)
 {
     down_interruptible(mutex);
-    down_interruptible(semEmpty);
-    down_interruptible(semFull);
-    kthread_stop(struct task_struct *producer);
-    kthread_stop(struct task_struct *consumer);
-    pthread_mutex_destroy(&mutex);
-    sem_destroy(&semEmpty);
-    sem_destroy(&semFull);
+    down_interruptible(empty);
+    down_interruptible(full);
+    
     int second = totalNano/1000000000;
     int minute = second/60        
     second %= 60;
     int hour = minute/60;
     minute %= 60;
     printk(KERN_INFO "The total elapsed time of all processes for UID %d is", uuid);
-    printk(KERN_INFO "%d:%d:%d", hour, minute, second);
+    printk(KERN_INFO "%d:%d:%d\n", hour, minute, second);
     vfree(processArray);
 }
 
