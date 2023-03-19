@@ -44,28 +44,7 @@ int totalNano = 0;
 
 
 
-int producer_consumer_init(void)
-{
-  
 
-    // Dac Le initialize
-
-    sema_init(&empty, buffSize);
-    sema_init(&full, 0);
-    sema_init(&mutex, 1);
-
-    processArray= vmalloc(buffSize*sizeof(struct task_struct));
-    if(prod > 0)
-    {
-      producerThread = kthread_run(producer_thread, NULL, "producer-1");
-      if(cons > 0)
-	{
-	   consumerThread = kthread_run(consumer_thread, NULL, "consumer-1");
-	}
-    }
-	
-    return 0;
-}
 
 static int producer_thread(void* args)
 {
@@ -87,7 +66,7 @@ static int producer_thread(void* args)
 		}
         	pCount++;
         	processArray[prodInd] = *p;
-       	 	prodInd = (prodInd+1) % buffSize; 
+       	prodInd = (prodInd+1) % buffSize; 
         	printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->comm, pCount, prodInd, p->pid);
         
         // end of something
@@ -110,21 +89,21 @@ static int consumer_thread(void* args)
         down(&full);
         down(&mutex);
 
-        if (down_interruptible(&semFull))
+        if (down_interruptible(&full))
             break;
 
 
         // do something
-            struct task_struct timeproc = processArray[conind];
-           long long int nanosecond = ktime_get_ns() - timeproc->start_time;
+            struct task_struct timeProc = processArray[conInd];
+            long long int nanosecond = ktime_get_ns()-timeProc.start_time;
             totalNano = totalNano + nanosecond;
             int second = nanosecond/1000000000;
             int minute = second/60;
-            second %= 60;
+            second = second % 60;
             int hour = minute/60;
-            minute %= 60;
+            minute = minute % 60;
             cCount++;
-            printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", timeproc->comm, cCount, conInd, timeproc.pid, hour, minute,second);
+            printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", timeProc.comm, cCount, conInd, timeProc.pid, hour, minute,second);
             conInd = (conInd+1)%buffSize;
 
         
@@ -137,18 +116,37 @@ static int consumer_thread(void* args)
      return 0;
 
 }
+
+int producer_consumer_init(void)
+{
+  
+
+    // Dac Le initialize
+
+    sema_init(&empty, buffSize);
+    sema_init(&full, 0);
+    sema_init(&mutex, 1);
+
+    processArray= vmalloc(buffSize*sizeof(struct task_struct));
+    if(prod > 0)
+    {
+      producerThread = kthread_run(producer_thread, NULL, "producer-1");
+      if(cons > 0)
+	{
+	   consumerThread = kthread_run(consumer_thread, NULL, "consumer-1");
+	}
+    }
+	
+    return 0;
+}
   
 void producer_consumer_exit(void)
-{
-    down_interruptible(mutex);
-    down_interruptible(empty);
-    down_interruptible(full);
-    
+{   
     int second = totalNano/1000000000;
-    int minute = second/60        
-    second %= 60;
+    int minute = second/60;        
+    second = second % 60;
     int hour = minute/60;
-    minute %= 60;
+    minute = minute % 60;
     printk(KERN_INFO "The total elapsed time of all processes for UID %d is", uuid);
     printk(KERN_INFO "%d:%d:%d\n", hour, minute, second);
     vfree(processArray);
