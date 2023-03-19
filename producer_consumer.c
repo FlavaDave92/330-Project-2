@@ -14,6 +14,7 @@
 #define CONSUMER_THREAD 3
 sem_t semEmpty;
 sem_t semFull;
+pthread_mutex_t mutex;
 int totalNano
 
 task_struct *task;
@@ -103,6 +104,9 @@ void producer_consumer_exit(void)
     down_interruptible(semFull);
     kthread_stop(struct task_struct *producer);
     kthread_stop(struct task_struct *consumer);
+    pthread_mutex_destroy(&mutex);
+    sem_destroy(&semEmpty);
+    sem_destroy(&semFull);
     int second = totalNano/1000000000;
     int minute = second/60        
     second %= 60;
