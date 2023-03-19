@@ -9,6 +9,7 @@
 #include <linux/time.h>
 #include <linux/timer.h>
 #include <linux/slab.h>
+#include <linux/vmalloc.h>
 
 static uid_t uuid;
 static int buffSize;
