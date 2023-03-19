@@ -26,7 +26,8 @@ struct semaphore empty;
 struct semaphore full;
 struct semaphore mutex;
 
-
+struct task_struct* producerThread;
+struct task_struct* consumerThread;
 struct task_struct* p;
 int prodInd = 0;
 int prodCount = 0;
@@ -84,7 +85,7 @@ static int producer_thread(void* args)
 		if(cons == 0 && buffSize == prodInd) {
 			break;
 		}
-        	pcount++;
+        	pCount++;
         	processArray[prodInd] = *p;
        	 	prodInd = (prodInd+1) % buffSize; 
         	printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->comm, pCount, prodInd, p->pid);
@@ -106,8 +107,8 @@ static int consumer_thread(void* args)
   
     while(!kthread_should_stop())
     {
-        sem_wait(&semFull);
-        pthread_mutex_lock(&mutex);
+        down(&full);
+        down(&mutex);
 
         if (down_interruptible(&semFull))
             break;
