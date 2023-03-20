@@ -100,6 +100,7 @@ static int consumer_thread(void* args)
         minute = second / 60;
         second = second % 60;
         hour = minute / 60;
+        minute = minute % 60;
         cCount++;
         printk("[Consumer-1] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", cCount, conInd, timeProc.pid, hour, minute,second);
         conInd = (conInd+1)%buffSize;
@@ -144,6 +145,7 @@ void producer_consumer_exit(void)
     minute = second / 60;
     second = second % 60;
     hour = minute / 60;
+    minute = minute % 60;
     printk(KERN_INFO "The total elapsed time of all processes for UID %d is %d:%d:%d\n", uuid, hour, minute, second);
     vfree(processArray);
 }
