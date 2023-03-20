@@ -21,33 +21,27 @@ module_param(prod, int, 0644);
 module_param(cons, int, 0644);
 module_param(uuid, int, 0644);
 
-
 struct semaphore empty;
 struct semaphore full;
 struct semaphore mutex;
-
 struct task_struct* producerThread;
 struct task_struct* consumerThread;
 struct task_struct* p;
+struct task_struct* processArray;
+struct task_struct* task;
+struct task_struct timeProc;
+
 int second = 0;
 int hour = 0;
 int minute = 0;
 int prodInd = 0;
 int prodCount = 0;
-struct task_struct* processArray;
 int pCount = 0;
 int cCount = 0;
-
 int conInd = 0;
 
-struct task_struct* task;
-struct task_struct timeProc;
 long long int nanosecond = 0;
 long long int totalNano = 0;
-
-
-
-
 
 static int producer_thread(void* args)
 {
