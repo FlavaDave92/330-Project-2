@@ -29,9 +29,9 @@ struct semaphore mutex;
 struct task_struct* producerThread;
 struct task_struct* consumerThread;
 struct task_struct* p;
-int second;
-int hour;
-int minute;
+int second = 0;
+int hour = 0;
+int minute = 0;
 int prodInd = 0;
 int prodCount = 0;
 struct task_struct* processArray;
@@ -42,9 +42,8 @@ int conInd = 0;
 
 struct task_struct* task;
 struct task_struct timeProc;
-long long int nanosecond;
-
-int totalNano = 0;
+long long int nanosecond = 0;
+long long int totalNano = 0;
 
 
 
@@ -59,7 +58,7 @@ static int producer_thread(void* args)
    	}
         else{
         
-        	if (down_interruptible(&empty) || down_interuptible(&mutex)) {
+        	if (down_interruptible(&empty) || down_interruptible(&mutex)) {
         		break;
 		}
 		if(cons == 0 && buffSize == prodInd) {
@@ -68,7 +67,7 @@ static int producer_thread(void* args)
         	pCount++;
         	processArray[prodInd] = *p;
        		prodInd = (prodInd+1) % buffSize; 
-        	printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->comm, pCount, prodInd, p->pid);
+        	printk("[Producer-1] Produced Item#-%d at buffer index: %d for PID:%d", pCount, prodInd, p->pid);
         
         // end of something
         	up(&mutex);
@@ -88,20 +87,21 @@ static int consumer_thread(void* args)
     while(!kthread_should_stop())
     {
 
-        if (down_interruptible(&full) || down_interuptible(&mutex)) {
+        if (down_interruptible(&full) || down_interruptible(&mutex)) {
             break;
 	}
 
 
         // do something
         timeProc = processArray[conInd];
-        nanosecond = ktime_get_ns()-timeProc.start_time;
+        nanosecond = ktime_get_ns() - timeProc.start_time;
         totalNano = totalNano + nanosecond;
-        second = nanosecond/1000000000;
-        minute = second/60;
-        hour = minute/60;
+        second = nanosecond / 1000000000;
+        minute = second / 60;
+        second = second % 60;
+        hour = minute / 60;
         cCount++;
-        printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", timeProc.comm, cCount, conInd, timeProc.pid, hour, minute,second);
+        printk("[Consumer-1] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", cCount, conInd, timeProc.pid, hour, minute,second);
         conInd = (conInd+1)%buffSize;
 
         
@@ -140,11 +140,11 @@ int producer_consumer_init(void)
   
 void producer_consumer_exit(void)
 {   
-    second = totalNano/1000000000;
-    minute = second/60;        
-    hour = minute/60;
-    printk(KERN_INFO "The total elapsed time of all processes for UID %d is", uuid);
-    printk(KERN_INFO "%d:%d:%d\n", hour, minute, second);
+    second = totalNano/ 1000000000;
+    minute = second / 60;
+    second = second % 60;
+    hour = minute / 60;
+    printk(KERN_INFO "The total elapsed time of all processes for UID %d is %d:%d:%d\n", uuid, hour, minute, second);
     vfree(processArray);
 }
 
