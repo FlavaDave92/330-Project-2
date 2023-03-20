@@ -61,7 +61,7 @@ static int producer_thread(void* args)
         	pCount++;
         	processArray[prodInd] = *p;
        		prodInd = (prodInd+1) % buffSize; 
-        	printk("[Producer-1] Produced Item#-%d at buffer index: %d for PID:%d", pCount, prodInd, p->pid);
+        	printk("[%s] Produced Item#-%d at buffer index: %d for PID:%d",p->comm, pCount, prodInd, p->pid);
         
         // end of something
         	up(&mutex);
@@ -96,7 +96,7 @@ static int consumer_thread(void* args)
         hour = minute / 60;
         minute = minute % 60;
         cCount++;
-        printk("[Consumer-1] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", cCount, conInd, timeProc.pid, hour, minute,second);
+        printk("[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", timeProc.comm cCount, conInd, timeProc.pid, hour, minute,second);
         conInd = (conInd+1)%buffSize;
 
         
