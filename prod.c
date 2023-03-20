@@ -52,17 +52,14 @@ int totalNano = 0;
 
 static int producer_thread(void* args)
 {
-
-  
     for_each_process(p)
     {
-    	down(&mutex);
    	if(uuid != p->cred->uid.val) {
 	       continue;
    	}
         else{
         
-        	if (down_interruptible(&empty)) {
+        	if (down_interruptible(&empty) || down_interuptible(&mutex)) {
         		break;
 		}
 		if(cons == 0 && buffSize == prodInd) {
@@ -70,7 +67,7 @@ static int producer_thread(void* args)
 		}
         	pCount++;
         	processArray[prodInd] = *p;
-       	prodInd = (prodInd+1) % buffSize; 
+       		prodInd = (prodInd+1) % buffSize; 
         	printk(KERN_INFO "[%s] Produced Item#-%d at buffer index: &d for PID:%d", p->comm, pCount, prodInd, p->pid);
         
         // end of something
@@ -90,23 +87,22 @@ static int consumer_thread(void* args)
   
     while(!kthread_should_stop())
     {
-        down(&full);
-        down(&mutex);
 
-        if (down_interruptible(&full))
+        if (down_interruptible(&full) || down_interuptible(&mutex)) {
             break;
+	}
 
 
         // do something
-            timeProc = processArray[conInd];
-            nanosecond = ktime_get_ns()-timeProc.start_time;
-            totalNano = totalNano + nanosecond;
-            second = nanosecond/1000000000;
-            minute = second/60;
-            hour = minute/60;
-            cCount++;
-            printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", timeProc.comm, cCount, conInd, timeProc.pid, hour, minute,second);
-            conInd = (conInd+1)%buffSize;
+        timeProc = processArray[conInd];
+        nanosecond = ktime_get_ns()-timeProc.start_time;
+        totalNano = totalNano + nanosecond;
+        second = nanosecond/1000000000;
+        minute = second/60;
+        hour = minute/60;
+        cCount++;
+        printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", timeProc.comm, cCount, conInd, timeProc.pid, hour, minute,second);
+        conInd = (conInd+1)%buffSize;
 
         
 
