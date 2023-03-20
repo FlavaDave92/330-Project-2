@@ -29,6 +29,9 @@ struct semaphore mutex;
 struct task_struct* producerThread;
 struct task_struct* consumerThread;
 struct task_struct* p;
+int second;
+int hour;
+int minute;
 int prodInd = 0;
 int prodCount = 0;
 struct task_struct* processArray;
@@ -38,7 +41,8 @@ int cCount = 0;
 int conInd = 0;
 
 struct task_struct* task;
-
+struct task_struct timeProc;
+long long int nanosecond;
 
 int totalNano = 0;
 
@@ -94,14 +98,12 @@ static int consumer_thread(void* args)
 
 
         // do something
-            struct task_struct timeProc = processArray[conInd];
-            long long int nanosecond = ktime_get_ns()-timeProc.start_time;
+            timeProc = processArray[conInd];
+            nanosecond = ktime_get_ns()-timeProc.start_time;
             totalNano = totalNano + nanosecond;
-            int second = nanosecond/1000000000;
-            int minute = second/60;
-            second = second % 60;
-            int hour = minute/60;
-            minute = minute % 60;
+            second = nanosecond/1000000000;
+            minute = second/60;
+            hour = minute/60;
             cCount++;
             printk(KERN_INFO "[%s] Consumed Item#-%d on buffer index: %d PID:%d Elapsed Time-%d:%d:%d", timeProc.comm, cCount, conInd, timeProc.pid, hour, minute,second);
             conInd = (conInd+1)%buffSize;
@@ -142,11 +144,9 @@ int producer_consumer_init(void)
   
 void producer_consumer_exit(void)
 {   
-    int second = totalNano/1000000000;
-    int minute = second/60;        
-    second = second % 60;
-    int hour = minute/60;
-    minute = minute % 60;
+    second = totalNano/1000000000;
+    minute = second/60;        
+    hour = minute/60;
     printk(KERN_INFO "The total elapsed time of all processes for UID %d is", uuid);
     printk(KERN_INFO "%d:%d:%d\n", hour, minute, second);
     vfree(processArray);
